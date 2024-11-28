@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        a {
+            color: #2196F3;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Block Details</h1>
+    <p><strong>Height:</strong> {{.Height}}</p>
+    <p><strong>Timestamp:</strong> {{.Timestamp}}</p>
+    <p><strong>Transactions:</strong> {{.Transactions}}</p>
+    <p><strong>Hash:</strong> {{.Hash}}</p>
+    <p><strong>Previous Block Hash:</strong> {{.PrevBlockHash}}</p>
+    <p><strong>Nonce:</strong> {{.Nonce}}</p>
+    <br>
+    <a href="/">Back to Blockchain</a>
+</body>
+</html>

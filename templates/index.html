@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AncapCoin Blockchain Explorer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        a {
+            color: #2196F3;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>AncapCoin Blockchain Explorer</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Height</th>
+                <th>Timestamp</th>
+                <th>Transactions</th>
+                <th>Hash</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .}}
+            <tr>
+                <td>{{.Height}}</td>
+                <td>{{.Timestamp}}</td>
+                <td>{{.Transactions}}</td>
+                <td>{{.Hash}}</td>
+                <td><a href="/block/{{.Hash}}">View</a></td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</body>
+</html>
