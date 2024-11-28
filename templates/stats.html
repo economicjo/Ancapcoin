@@ -10,3 +10,15 @@
     <p>Total Nodes: {{.TotalNodes}}</p>
 </body>
 </html>
+
+const ctx = document.getElementById('myChart');
+const myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['January', 'February', 'March'],
+        datasets: [{
+            label: 'Blocks per Day',
+            data: [12, 19, 3],
+        }]
+    }
+});

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"ANCAPCOIN/pkg/api"
-	"ANCAPCOIN/pkg/blockchain"
-	"ANCAPCOIN/pkg/transaction"
-	"ANCAPCOIN/pkg/wallet"
+	"example.com/ancapcoin/pkg/api"
+	"example.com/ancapcoin/pkg/blockchain"
+	"example.com/ancapcoin/pkg/transaction"
+	"example.com/ancapcoin/pkg/wallet"
 	"fmt"
 	"log"
 	"os"
@@ -19,6 +19,7 @@ var (
 	mu                 sync.Mutex                          // Para manejar concurrencia en mempool
 	p2pNode            *p2p.Node                           // Nodo P2P
 )
+
 
 func main() {
 	// Inicializar variables globales
@@ -123,9 +124,9 @@ func main() {
 		case 4:
 			printBlockchain()
 		case 5:
-			createTransaction()
+			createTransaction() // Crear una nueva transacción
 		case 6:
-			viewPendingTransactions()
+			viewPendingTransactions() // Ver transacciones pendientes en el mempool
 		case 7:
 			if consensusType == "pos" {
 				registerValidator()
@@ -149,9 +150,24 @@ func main() {
 		case 13:
 			fmt.Println("Thank you for using AncapCoin!")
 			os.Exit(0)
+		case 14: // Retransmitir transacciones no confirmadas
+			retransmitTransactions()
+		
+		case 15: // Crear una propuesta
+			createNewProposal()
+		
+		case 16: // Votar por una propuesta
+			voteForProposal()
+		
+		case 17: // Ver propuestas existentes
+			viewProposals()
+		
+		case 18: // Cerrar una propuesta
+			closeExistingProposal()
 		default:
 			fmt.Println("Invalid option. Please try again.")
-		}
+		
+	}
 	}
 }
 
@@ -253,14 +269,6 @@ func createTransaction() {
 	if currentWallet == nil || blockchainInstance == nil {
 		fmt.Println("Blockchain or wallet are not initialized.")
 		return
-	    err := shardedBlockchain.AddTransactionToShard(tx)
-    if err != nil {
-        fmt.Printf("Failed to add transaction to shard: %v\n", err)
-    } else {
-        fmt.Println("Transaction added to shard successfully.")
-    }
-	return
-	}
 	}
 
 	var to string
@@ -290,6 +298,7 @@ func createTransaction() {
 	fmt.Printf("To: %s\n", to)
 	fmt.Printf("Amount: %d\n", amount)
 }
+
 
 // View pending transactions in the mempool
 func viewPendingTransactions() {
@@ -469,4 +478,81 @@ func executeSmartContract() {
 		return
 	}
 	fmt.Printf("Function executed successfully. Result: %v\n", result)
+}
+
+func startAPIServer() {
+	http.HandleFunc("/wallet", getWalletInfo)
+	http.HandleFunc("/sendTransaction", sendTransactionAPI)
+	http.HandleFunc("/createSmartContract", createSmartContractAPI)
+	http.HandleFunc("/executeSmartContract", executeSmartContractAPI)
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func getWalletInfo(w http.ResponseWriter, r *http.Request) {
+	walletInfo := map[string]interface{}{
+		"address": currentWallet.GetAddress(),
+		"balance": blockchainInstance.GetBalance(currentWallet.GetAddress()),
+	}
+	json.NewEncoder(w).Encode(walletInfo)
+}
+
+func sendTransactionAPI(w http.ResponseWriter, r *http.Request) {
+	var txData struct {
+		To     string `json:"to"`
+		Amount int    `json:"amount"`
+	}
+	json.NewDecoder(r.Body).Decode(&txData)
+
+	tx := transaction.NewTransaction(currentWallet.GetAddress(), txData.To, txData.Amount, blockchainInstance.GetUTXOSet())
+	blockchainInstance.AddTransaction(tx)
+	w.WriteHeader(http.StatusOK)
+}
+
+func createSmartContractAPI(w http.ResponseWriter, r *http.Request) {
+	var contractData struct {
+		Code string `json:"code"`
+	}
+	json.NewDecoder(r.Body).Decode(&contractData)
+
+	contract := blockchain.NewSmartContract(contractData.Code, currentWallet.GetAddress())
+	blockchainInstance.AddContract(contract)
+	w.WriteHeader(http.StatusOK)
+}
+
+func executeSmartContractAPI(w http.ResponseWriter, r *http.Request) {
+	var execData struct {
+		ContractAddress string        `json:"contractAddress"`
+		FunctionName    string        `json:"functionName"`
+		Args            []interface{} `json:"args"`
+	}
+	json.NewDecoder(r.Body).Decode(&execData)
+
+	contract := blockchainInstance.GetContract(execData.ContractAddress)
+	result, err := contract.ExecuteFunction(execData.FunctionName, execData.Args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{"result": result})
+}
+
+func startExplorer(blockchainInstance *blockchain.Blockchain) {
+	explorer := explorer.Explorer{Blockchain: blockchainInstance}
+	http.HandleFunc("/explorer/blocks", explorer.GetLatestBlocks)
+	http.HandleFunc("/explorer/block", explorer.GetBlockDetails)
+}
+
+func retransmitTransactions() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if len(mempool) == 0 {
+		fmt.Println("No unconfirmed transactions to retransmit.")
+		return
+	}
+
+	for _, pt := range mempool {
+		p2pNode.BroadcastTransaction(pt.Tx)
+	}
+	fmt.Println("All unconfirmed transactions have been retransmitted.")
 }
